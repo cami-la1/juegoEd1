@@ -1,0 +1,45 @@
+//---------------------------------------------------------------------------
+
+#ifndef pila2H
+#define pila2H
+	#include "Umemoria.h"
+//---------------------------------------------------------------------------
+
+
+typedef int dir;
+//typedef float dir;
+ //typedef char dir;
+	const string datoNL = "elemento,sig";
+	const string elementNL = "->elemento";
+	const string sigNL = "->sig";
+	//static const int MAX= 20;
+   //	static const int NULO = -1;
+class pilaMM{
+
+	private:
+
+	dir pe;
+	CSmemoria* Cm;
+	public: 	int longitud;
+pilaM();
+	pilaM(CSmemoria* m);
+	 bool Vacia();
+	 void Meter(dir e);
+
+       // En UP_memoria.h
+CSmemoria* obtenerMemoria() {
+    return Cm;
+}
+
+  void Sacar(dir &e);
+  dir cima();
+ void imprimir(TColor FormColor, TCanvas *Canvas);
+     float EvaluarPostfija(const String& ExpPostfija);
+ float Evalua(float Op1, char Operador, float Op2) ;
+	  int PrioridadInfija(char c) ;
+	  int PrioridadPila(char c) ;
+String InfijaToPostfija2(const String& Infija,TColor FormColor, TCanvas *Canvas) ;
+	float EvaluarPostfija2(const String& ExpPostfija,TColor FormColor, TCanvas *Canvas);
+ bool ParentesisOk(const String& Expresion) ;
+};
+#endif

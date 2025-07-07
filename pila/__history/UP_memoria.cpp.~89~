@@ -1,0 +1,349 @@
+	//---------------------------------------------------------------------------
+
+	#pragma hdrstop
+
+	#include "UP_memoria.h"
+	//---------------------------------------------------------------------------
+	#pragma package(smart_init)
+	pilaM::pilaM() {
+		 pe=-1;
+
+	// Cm = new CSmemoria();
+	}
+	pilaM::pilaM(CSmemoria* m) {
+	 pe=-1;
+	 longitud=0;
+	 Cm= m;
+	}
+
+	bool pilaM::Vacia(){
+	return (longitud==0) ;
+	}
+
+	void pilaM ::Meter(dir e){
+	int dir=Cm->new_espacio("elemento,sig");
+	if (dir!=NULO) {
+		 Cm->poner_dato(dir,elementNL ,e);
+			 Cm->poner_dato(dir, sigNL ,pe) ;
+		 pe=dir;
+
+		longitud++;
+	}
+	}
+
+
+	void pilaM::Sacar(dir& e){
+		   if (Vacia()==false) {
+		   int z=pe;
+				e = Cm->obtenerDato(pe,elementNL) ;// Assigning the top element to e
+		pe=Cm->obtenerDato(pe, sigNL); // Moving the top pointer to the next element
+			Cm->Delete_espacio(z);  // Deleting the previous top element
+		longitud--;
+		   }
+
+	}
+	dir pilaM::cima() {
+		if (Vacia()) {
+			// Handle error: Stack is empty
+			return -1;  // Return an error value or throw an exception
+		} else {
+			return Cm->obtenerDato(pe,elementNL); // Return the top element
+		}
+	}
+
+
+void pilaM::imprimir(TColor FormColor, TCanvas *Canvas) {
+if (!Vacia()) {
+
+
+    const int TamanoCeldaX = 60;
+    const int TamanoCeldaY = 30;
+    const int x = 400;
+    const int yBase = 400; // parte inferior donde se empieza a dibujar
+
+    // Paso 1: guardar direcciones en orden de inserción
+    int direcciones[MAX];
+    int dir = pe;
+    int n = 0;
+    while (dir != NULO && n < MAX) {
+        direcciones[n] = dir;
+        dir = Cm->obtenerDato(dir, sigNL);
+        n++;
+    }
+
+    // Paso 2: dibujar desde la base hacia la cabeza (de abajo a arriba)
+    int y = yBase - TamanoCeldaY;  // empezar desde la parte inferior
+    for (int i = 0; i < n; i++) {
+        int dato = Cm->obtenerDato(direcciones[i], elementNL);
+
+        // Coordenadas del rectángulo
+        int x1 = x;
+        int y1 = y;
+        int x2 = x + TamanoCeldaX;
+        int y2 = y + TamanoCeldaY;
+
+        // Dibujar rectángulo SIN borde superior si es la cabeza
+        Canvas->Brush->Color = FormColor;
+        Canvas->Pen->Color = clBlack;
+
+        if (i == n - 1) {
+            // Cabeza: no dibujar línea superior
+            Canvas->MoveTo(x1, y1);       // inicio a la izquierda
+            Canvas->LineTo(x1, y2);       // izquierda hacia abajo
+            Canvas->LineTo(x2, y2);       // abajo hacia la derecha
+            Canvas->LineTo(x2, y1);       // derecha hacia arriba (sin cerrar arriba)
+        } else {
+            TRect rect(x1, y1, x2, y2);
+            Canvas->Rectangle(rect);
+        }
+
+        // Dibuja el dato
+        Canvas->TextOutW(x1 + 5, y1 + 5, IntToStr(dato));
+        y -= TamanoCeldaY;  // subir para la siguiente celda
+    }
+
+    // Etiqueta "cabeza"
+    if (n > 0) {
+        Canvas->Font->Size = 8;
+        Canvas->TextOutW(x + TamanoCeldaX + 10, y + TamanoCeldaY + 5, "cabeza");
+	}
+}else
+ShowMessage("pila vacia") ;
+}
+
+
+
+	//--------------------------------
+	//----------aplicacion1----------
+
+    float pilaM::Evalua(float Op1, char Operador, float Op2) {
+	switch (Operador) {
+		case '^': return pow(Op1, Op2);
+		case '*': return Op1 * Op2;
+		case '/': return Op1 / Op2;
+		case '+': return Op1 + Op2;
+		case '-': return Op1 - Op2;
+		default: throw Exception("Operador desconocido");
+	}
+}
+float pilaM::EvaluarPostfija(const String& ExpPostfija) {
+	for (int i = 1; i <= ExpPostfija.Length(); i++) {
+		char ch = ExpPostfija[i];
+		if (isdigit(ch)) {
+			Meter(ch - '0');  // Convertir carácter numérico a entero
+		} else {
+			dir Op2, Op1;
+			Sacar(Op2);
+			Sacar(Op1);
+			float Z = Evalua(Op1, ch, Op2);
+			Meter(Z);
+		}
+	}
+	return cima();
+}
+bool pilaM::ParentesisOk(const String& Expresion) {
+	for (int i = 1; i <= Expresion.Length(); i++) {
+		char ch = Expresion[i];
+		if (ch == '(') {
+			Meter('(');
+		} else if (ch == ')') {
+			if (Vacia()) return false;
+			dir aux;
+			Sacar(aux);
+		}
+	}
+	return Vacia();
+}
+String pilaM::InfijaToPostfija(const String& Infija) {
+	String Postfija = "";
+	for (int i = 1; i <= Infija.Length(); i++) {
+		char ch = Infija[i];
+		if (isdigit(ch)) {
+			Postfija += ch;
+		} else if (ch == '(') {
+			Meter(ch);
+		} else if (ch == ')') {
+			dir aux;
+			while (!Vacia()) {
+				Sacar(aux);
+				if ((char)aux == '(') break;
+				Postfija += (char)aux;
+			}
+		} else {
+			while (!Vacia() && PrioridadInfija(ch) <= PrioridadPila((char)cima())) {
+				dir aux;
+				Sacar(aux);
+				Postfija += (char)aux;
+			}
+			Meter(ch);
+		}
+	}
+	while (!Vacia()) {
+		dir aux;
+		Sacar(aux);
+		Postfija += (char)aux;
+	}
+	return Postfija;
+}
+int pilaM::PrioridadInfija(char c) {
+	switch (c) {
+		case '^': return 4;
+		case '*': case '/': return 2;
+		case '+': case '-': return 1;
+		case '(': return 5;
+		default: return 0;
+	}
+}
+
+int pilaM::PrioridadPila(char c) {
+	switch (c) {
+		case '^': return 3;
+		case '*': case '/': return 2;
+		case '+': case '-': return 1;
+		case '(': return 0;
+		default: return 0;
+	}
+}
+
+//--------------------------
+//---------aplicacion para n digitos
+
+
+String pilaM::InfijaToPostfija2(const String& infija) {
+	String postfija = "";
+	String numero = "";
+
+	for (int i = 1; i <= infija.Length(); i++) {
+		char ch = infija[i];
+
+		if (isdigit(ch) || ch == '.') {
+			numero += ch;
+		} else {
+			// si acumulaste un número, agréguelo
+			if (!numero.IsEmpty()) {
+				postfija += numero + " ";
+				numero = "";
+			}
+
+			if (ch == '(') {
+				Meter(ch);
+			}
+			else if (ch == ')') {
+				dir aux;
+				while (!Vacia()) {
+					Sacar(aux);
+					if ((char)aux == '(') break;
+					postfija += (char)aux;
+					postfija += " ";
+				}
+			}
+			else if (strchr("+-*/^", ch)) {
+				while (!Vacia() && PrioridadInfija(ch) <= PrioridadPila((char)cima())) {
+					dir aux;
+					Sacar(aux);
+					postfija += (char)aux;
+					postfija += " ";
+				}
+				Meter(ch);
+			}
+		}
+	}
+
+	// Agregar el último número si quedó algo
+	if (!numero.IsEmpty()) {
+		postfija += numero + " ";
+	}
+
+	while (!Vacia()) {
+		dir aux;
+		Sacar(aux);
+		postfija += (char)aux;
+		postfija += " ";
+	}
+
+	return postfija.Trim();
+}
+
+
+
+float pilaM::EvaluarPostfija2(const String& expPostfija) {
+	String token = "";
+	for (int i = 1; i <= expPostfija.Length(); i++) {
+		char ch = expPostfija[i];
+
+		if (ch != ' ') {
+			token += ch;
+		} else if (!token.IsEmpty()) {
+			if (token.Length() == 1 && strchr("+-*/^", token[1])) {
+				// es operador
+				dir Op2, Op1;
+				Sacar(Op2);
+				Sacar(Op1);
+				float Z = Evalua(Op1, token[1], Op2);
+				Meter(Z);
+			} else {
+				try {
+					float num = StrToFloat(token);
+					Meter(num);
+				} catch (...) {
+					ShowMessage("Error al convertir '" + token + "' a número.");
+					return 0;
+				}
+			}
+			token = "";
+		}
+	}
+
+	// procesar el último token si existe
+	if (!token.IsEmpty()) {
+		if (token.Length() == 1 && strchr("+-*/^", token[1])) {
+			dir Op2, Op1;
+			Sacar(Op2);
+			Sacar(Op1);
+			float Z = Evalua(Op1, token[1], Op2);
+			Meter(Z);
+		} else {
+			try {
+				float num = StrToFloat(token);
+				Meter(num);
+			} catch (...) {
+				ShowMessage("Error al convertir '" + token + "' a número.");
+				return 0;
+			}
+		}
+	}
+
+	return cima();
+}
+
+
+ String pilaM::imprimir4() {
+	String resultado = "[";
+	int direcciones[MAX];
+	int dir = pe;
+	int n = 0;
+
+	// Paso 1: recorrer la pila y guardar direcciones
+	while (dir != NULO && n < MAX) {
+		direcciones[n] = dir;
+		dir = Cm->obtenerDato(dir, sigNL);
+		n++;
+	}
+
+	// Paso 2: construir string desde el fondo hacia la cima
+	for (int i = n - 1; i >= 0; i--) {
+		int dato = Cm->obtenerDato(direcciones[i], elementNL);
+		resultado += IntToStr(dato);
+		if (i > 0) resultado += ", ";
+	}
+
+	resultado += "]";
+	return resultado;
+}
+
+//--------------
+ void pilaM::mostrarAtributos(TColor FormColor, TCanvas *Canvas){
+
+
+ }
+

@@ -1,0 +1,47 @@
+//---------------------------------------------------------------------------
+
+#ifndef Matricez_ptr2H
+#define Matricez_ptr2H
+//---------------------------------------------------------------------------
+// Definición del tipo de dato NodoF
+// Forward declaration of NodoC
+struct NodoC;
+
+// Definición del tipo de dato NodoF
+struct NodoFh {
+    int Fila;
+    NodoF* SigF;  // Puntero al siguiente NodoF
+    NodoF* AntF;  // Puntero al anterior NodoF
+    NodoC* PtrCol;  // Puntero a NodoC
+};
+
+// Definición del tipo de dato NodoC
+struct NodoCh {
+    int Col;
+    int Dato;
+    NodoC* SigCol;  // Puntero al siguiente NodoC
+};
+
+// Rest of your code...
+
+
+// Definición de la clase Matrizptr2
+class Matrizptr2 {
+private:
+    NodoFh* PtrFil;  // Dirección a tipo NodoF
+    int rep;
+    int dimf;
+    int dimc;
+
+public:
+    Matrizptr2();  // Constructor
+    void dimensionar(int df, int dc);  // Dimensionar la matriz
+    int dimension_Fila();  // Obtener la dimensión de la fila
+    int dimension_columna();  // Obtener la dimensión de la columna
+    void poner(int f, int c, int valor);  // Poner un elemento en la matriz
+    int Elemento(int f, int c);  // Obtener un elemento de la matriz
+	void Definir_valor_repetido(int valor);  // Definir el valor repetido
+      void imprimir(TColor FormColor, TCanvas *Canvas) ;
+};
+
+#endif

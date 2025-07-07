@@ -1,0 +1,172 @@
+//---------------------------------------------------------------------------
+// jugador.cpp
+
+#pragma hdrstop
+
+#include "jugador.h"
+#include <Vcl.h>     // Necesario para los códigos de teclas como VK_UP
+#include <stdlib.h>  // Necesario para rand() para la fruta
+
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+
+// --- Constructor ---
+// Guarda los punteros a las estructuras de datos y inicializa las coordenadas.
+ControlJuego::ControlJuego(MatrizDispersa* m, ColaPri* c, pilaM* p) {
+    this->mapa = m;
+    this->cola_de_turnos = c;
+    this->pila_undo = p;
+    // Se inicializan en -1 para saber que aún no las hemos localizado.
+    this->p1_fila = -1;
+    this->p1_col = -1;
+    this->p2_fila = -1;
+    this->p2_col = -1;
+}
+
+// --- Lógica de Inicialización ---
+// Escanea el mapa al inicio para encontrar las posiciones (fila, columna)
+// donde fueron colocados aleatoriamente los jugadores.
+void ControlJuego::encontrarPosicionInicialJugadores() {
+    if (mapa == nullptr) return;
+
+    for (int f = 1; f <= mapa->dimension_Fila(); f++) {
+        for (int c = 1; c <= mapa->dimension_columna(); c++) {
+            int val = mapa->Elemento(f, c);
+            if (val == 2) { // Jugador 1
+                p1_fila = f;
+                p1_col = c;
+            } else if (val == 3) { // Jugador 2
+                p2_fila = f;
+                p2_col = c;
+            }
+        }
+    }
+}
+
+// --- Lógica Principal del Movimiento (Método Privado) ---
+// Valida si un movimiento a una nueva casilla es posible y actualiza el mapa.
+
+// jugador.cpp
+
+// jugador.cpp -> Versión final de intentarMover
+
+bool ControlJuego::intentarMover(int jugador, int nF, int nC) {
+    int destino = mapa->Elemento(nF, nC);
+
+    if (destino == 1 || (jugador == 1 && destino == 3) || (jugador == 2 && destino == 2)) {
+        return false;
+    }
+
+    int id_jugador = (jugador == 1) ? 2 : 3;
+    int fila_actual = (jugador == 1) ? p1_fila : p2_fila;
+    int col_actual = (jugador == 1) ? p1_col : p2_col;
+
+    pila_undo->Meter(id_jugador);
+    pila_undo->Meter(fila_actual);
+    pila_undo->Meter(col_actual);
+    pila_undo->Meter(destino);
+
+    mapa->poner2(fila_actual, col_actual, 0);
+    mapa->eliminarSiIgual(0);
+    mapa->poner2(nF, nC, id_jugador);
+
+    if (jugador == 1) {
+        p1_fila = nF;
+        p1_col = nC;
+    } else {
+        p2_fila = nF;
+        p2_col = nC;
+    }
+
+    // --- LÓGICA DE LA FRUTA (AQUÍ ESTÁ EL CAMBIO) ---
+    if (destino == 4) {
+        // Si el jugador comió una fruta...
+
+        // 1. Aumentamos su frecuencia en la cola de turnos.
+        // La prioridad 0 es para el jugador 1, la 1 para el jugador 2.
+        int prioridad_del_jugador = jugador - 1;
+        cola_de_turnos->aumentarFrecuencia(prioridad_del_jugador);
+
+        // 2. Volvemos a generar la fruta en una nueva posición vacía.
+        int f_rand, c_rand;
+        do {
+            f_rand = 2 + rand() % (mapa->dimension_Fila() - 2);
+            c_rand = 2 + rand() % (mapa->dimension_columna() - 2);
+        } while (mapa->Elemento(f_rand, c_rand) != 0);
+        mapa->poner(f_rand, c_rand, 4);
+    }
+
+    return true;
+}
+
+// --- Lógica para Deshacer Movimiento (Ctrl+Z) ---
+// jugador.cpp -> Versión corregida de deshacerMovimiento
+
+// jugador.cpp -> Versión corregida de deshacerMovimiento
+
+void ControlJuego::deshacerMovimiento() {
+    // Si la pila está vacía, no hay nada que deshacer.
+    if (pila_undo->Vacia()) {
+        return;
+    }
+
+    // 1. Sacamos los datos de la pila en orden inverso.
+    int valor_viejo_destino;
+    int col_original;
+    int fila_original;
+    int id_jugador;
+    pila_undo->Sacar(valor_viejo_destino);
+    pila_undo->Sacar(col_original);
+    pila_undo->Sacar(fila_original);
+    pila_undo->Sacar(id_jugador);
+
+    // 2. Obtenemos la posición actual del jugador que se movió.
+    int fila_actual, col_actual;
+    if (id_jugador == 2) { // Era el Jugador 1
+        fila_actual = p1_fila;
+        col_actual = p1_col;
+        p1_fila = fila_original; // Restauramos sus coordenadas internas
+        p1_col = col_original;
+    } else { // Era el Jugador 2
+        fila_actual = p2_fila;
+        col_actual = p2_col;
+        p2_fila = fila_original; // Restauramos sus coordenadas internas
+        p2_col = col_original;
+    }
+
+    // 3. --- RESTAURAMOS EL MAPA USANDO LA ESTRATEGIA CORRECTA ---
+
+    // Ponemos al jugador de vuelta en su casilla original.
+    mapa->poner2(fila_original, col_original, id_jugador);
+
+    // Restauramos lo que había en la casilla a la que se había movido.
+    // 'poner2' marcará la casilla con el valor correcto (sea 0 o 4 para la fruta).
+    mapa->poner2(fila_actual, col_actual, valor_viejo_destino);
+
+    // Si al restaurar hemos dejado algún nodo con valor 0, lo eliminamos.
+    // ESTA LÍNEA ES LA CLAVE PARA NO CORROMPER LA MEMORIA.
+    if (valor_viejo_destino == 0) {
+        mapa->eliminarSiIgual(0);
+    }
+}/*
+ AQUÍ VA TU MÉTODO procesarInput QUE YA TIENES
+ void ControlJuego::procesarInput(WORD tecla) { ... }
+*/
+// jugador.cpp
+
+void ControlJuego::procesarInput(WORD tecla) {
+    // Ya no necesitamos verificar el turno, solo ejecutar la acción de la tecla.
+    switch (tecla) {
+		// Acciones del Jugador 1
+        case 'W': intentarMover(1, p1_fila - 1, p1_col); break;
+		case 'S': intentarMover(1, p1_fila + 1, p1_col); break;
+		case 'A': intentarMover(1, p1_fila, p1_col - 1); break;
+        case 'D': intentarMover(1, p1_fila, p1_col + 1); break;
+
+        // Acciones del Jugador 2
+        case VK_UP:    intentarMover(2, p2_fila - 1, p2_col); break;
+        case VK_DOWN:  intentarMover(2, p2_fila + 1, p2_col); break;
+        case VK_LEFT:  intentarMover(2, p2_fila, p2_col - 1); break;
+        case VK_RIGHT: intentarMover(2, p2_fila, p2_col + 1); break;
+    }
+}

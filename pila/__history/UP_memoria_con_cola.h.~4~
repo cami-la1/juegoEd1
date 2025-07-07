@@ -1,0 +1,23 @@
+#ifndef UP_memoria_con_colaH
+#define UP_memoria_con_colaH
+#include "UC_memoria.h"
+//---------------------------------------------------------------------------
+
+class pilaMC {
+private:
+    colaM* c; // Único atributo, una referencia a una cola
+
+public:
+    // Constructor que recibe una cola
+    pilaMC(colaM* cola);
+      pilaMC();
+    // Métodos de la pila
+    bool Vacia();
+    void Meter(int e);
+    void Sacar(int &e);
+    int cima();
+    void imprimir(TColor FormColor, TCanvas *Canvas);
+};
+
+#endif
+

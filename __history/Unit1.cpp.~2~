@@ -1,0 +1,141 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit1.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm1 *Form1;
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key, TShiftState Shift)
+
+{
+   // Captura Ctrl+Z para deshacer
+    if (Shift.Contains(ssCtrl) && Key == 'Z') {
+        if (control_juego != nullptr) {
+            control_juego->deshacerMovimiento();
+            Invalidate(); // Redibujar inmediatamente después de deshacer
+        }
+    } else {
+        // Para cualquier otra tecla, la mete en la cola para ser procesada por el Timer
+		if (cola_de_teclas != nullptr) {
+            cola_de_teclas->Meter(Key);
+        }
+	}
+}
+//---------------------------------------------------------------------------
+// Unit1.cpp
+
+void __fastcall TForm1::FormCreate(TObject *Sender)
+{
+	// ... (todo el código que ya tenías para crear la memoria, la matriz, etc.)
+
+	// 1. Crear la memoria principal
+	memoria_principal = new CSmemoria();
+	  cola_de_teclas = new colaV1()   ;
+	// 2. Crear las estructuras de datos usando la memoria
+	matriz_juego = new MatrizDispersa(memoria_principal);
+	pila_movimientos = new pilaM(memoria_principal);
+	cola_turnos = new ColaPri(); // Esta no usa CSmemoria
+
+	// 3. Crear un objeto local para cargar el mapa
+	Mapa creador_de_mapa;
+	matriz_juego->dimensionar(10,10); // Usamos la clase 'Mapa' que sí existe
+	creador_de_mapa.cargarMapaInicial(matriz_juego, 10, 10);
+
+	// 5. Configurar la cola de turnos
+	cola_turnos->asignarFrecuenciaPrioridad(2, 0); // J1
+	cola_turnos->asignarFrecuenciaPrioridad(1, 1); // J2
+	cola_turnos->poner(1, 0); // Turno para Jugador 1
+	cola_turnos->poner(2, 1); // Turno para Jugador 2
+
+	// Maximizar la ventana y prepararla para el juego
+	this->WindowState = wsMaximized;
+
+	// --- ¡LÍNEA IMPORTANTE! ---
+	// 6. Forzar el primer pintado del formulario
+	Invalidate();
+}//---------------------------------------------------------------------------
+
+// Unit1.cpp
+
+void __fastcall TForm1::FormPaint(TObject *Sender)
+{
+    // 1. Si la matriz no existe, no hacemos nada.
+    if (matriz_juego == nullptr) {
+        return;
+    }
+
+    // --- Toda la lógica de dibujo ahora vive aquí ---
+
+    // 2. Obtenemos las dimensiones de la matriz de forma genérica
+    int dim_filas = matriz_juego->dimension_Fila();
+    int dim_columnas = matriz_juego->dimension_columna();
+
+    // 3. Calculamos el tamaño y la posición para centrar el mapa
+    int canvasWidth = this->Canvas->ClipRect.Width();
+    int canvasHeight = this->Canvas->ClipRect.Height();
+    int cellWidth = 40;
+    int cellHeight = 30;
+    int offsetX = (canvasWidth - dim_columnas * cellWidth) / 2;
+    int offsetY = (canvasHeight - dim_filas * cellHeight) / 2;
+
+    // 4. Recorremos la matriz celda por celda
+    for (int i = 1; i <= dim_filas; i++) {
+        for (int j = 1; j <= dim_columnas; j++) {
+            // Obtenemos el valor de la celda (funciona con cualquier matriz)
+            int valor = matriz_juego->Elemento(i, j);
+
+            // Calculamos la posición en pantalla
+            int x = offsetX + (j - 1) * cellWidth;
+            int y = offsetY + (i - 1) * cellHeight;
+
+            // Asignamos el color de relleno según el valor
+            switch (valor) {
+                case 1: Canvas->Brush->Color = clYellow; break; // Muro
+                case 2: Canvas->Brush->Color = clRed;    break; // Jugador 1
+                case 3: Canvas->Brush->Color = clBlue;   break; // Jugador 2
+                case 4: Canvas->Brush->Color = clGreen;  break; // Fruta
+                default: Canvas->Brush->Color = clWhite; break; // Vacío
+            }
+
+            // Dibujamos la celda con su color de relleno
+            this->Canvas->Rectangle(x, y, x + cellWidth, y + cellHeight);
+
+            // Dibujamos el texto del valor encima
+            this->Canvas->Font->Color = clBlack;
+            TSize textSize = this->Canvas->TextExtent(IntToStr(valor));
+            int textX = x + (cellWidth - textSize.cx) / 2;
+            int textY = y + (cellHeight - textSize.cy) / 2;
+            this->Canvas->TextOut(textX, textY, IntToStr(valor));
+        }
+    }
+}
+//---------------------------------------------------------------------------
+
+
+void __fastcall TForm1::Timer1Timer(TObject *Sender)
+{
+   // El "corazón" del juego: se ejecuta 10 veces por segundo
+    if (cola_de_teclas != nullptr && !cola_de_teclas->vacia()) {
+        int tecla_a_procesar;
+        cola_de_teclas->Sacar(tecla_a_procesar);
+
+        if (control_juego != nullptr) {
+            control_juego->procesarInput(tecla_a_procesar);
+        }
+
+        // Después de procesar un movimiento, mandamos a redibujar el formulario
+        Invalidate();
+	}
+}
+//---------------------------------------------------------------------------
+

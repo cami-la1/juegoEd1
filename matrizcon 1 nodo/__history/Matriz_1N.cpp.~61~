@@ -1,0 +1,223 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+ #include <vector>
+#include "Matriz_1N.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+	 MatrizDispersa::MatrizDispersa(CSmemoria* M) {
+    Cm = M;
+	PtrMatD = -1;
+    dimf = 0;
+	dimc = 0;
+    rep = 0;
+}
+
+void MatrizDispersa::dimensionar(int df, int dc) {
+    dimf = df;
+	dimc = dc;
+}
+	int MatrizDispersa::dimension_Fila(){
+
+	  return dimf;
+
+	}
+	int MatrizDispersa:: dimension_columna(){
+       return dimc;
+	}
+   int MatrizDispersa::buscar(int f, int c) {
+    int x = PtrMatD;
+    while (x != NULO) {
+        if (Cm->obtenerDato(x, "->fila") == f && Cm->obtenerDato(x, "->col") == c) {
+            return x;
+        }
+		x = Cm->obtenerDato(x, "->sig");
+    }
+    return NULO; // Retorna NULO si no encuentra el nodo
+}
+ void MatrizDispersa::poner(int f, int c, int e) {
+    // Buscar si existe f,c en los nodos
+    int dir = buscar(f, c);
+    if (dir == NULO) {
+        // Crear un nuevo espacio
+        int x = Cm->new_espacio("fila,col,dato,sig");
+		if (x != NULO) {
+            // Poner los datos
+            Cm->poner_dato(x, "->fila", f);
+            Cm->poner_dato(x, "->col", c);
+            Cm->poner_dato(x, "->dato", e);
+            Cm->poner_dato(x, "->sig", PtrMatD);
+            PtrMatD = x;
+        } else {
+            // Error: no hay espacio en la memoria
+            // Manejar el error aquí
+		}
+    } else {
+        // Poner el dato
+        Cm->poner_dato(dir, "->dato", e);
+        if (e == rep) {
+            // Eliminar el nodo
+            int temp = PtrMatD;
+            // Si el nodo a eliminar es el primer nodo
+            if (temp == dir) {
+                PtrMatD = Cm->obtenerDato(dir, "->sig");
+			} else {
+                // Buscar el nodo anterior al nodo a eliminar
+                while (Cm->obtenerDato(temp, "->sig") != dir) {
+                    temp = Cm->obtenerDato(temp, "->sig");
+                }
+                // Cambiar el enlace del nodo anterior al nodo siguiente
+                Cm->poner_dato(temp, "->sig", Cm->obtenerDato(dir, "->sig"));
+            }
+            // Liberar el espacio de memoria del nodo eliminado
+            Cm->Delete_espacio(dir);
+		}
+	}
+}
+
+
+
+
+
+
+
+void MatrizDispersa::eliminarSiIgual(int valor) {
+    // Recorrer todas las filas
+    int dirF = PtrMatD;
+    int prevF = NULO;
+    while (dirF != NULO) {
+        // Recorrer todas las columnas en la fila actual
+        int dirC = Cm->obtenerDato(dirF, "->sig");
+        int prevC = NULO;
+        while (dirC != NULO) {
+            // Si el valor en la posición actual es igual al valor de entrada
+            if (Cm->obtenerDato(dirC, "->dato") == valor) {
+                // Guardar la dirección del siguiente nodo
+                int temp = Cm->obtenerDato(dirC, "->sig");
+                // Si el nodo eliminado no era el primero de la fila
+                if (prevC != NULO) {
+                    // Actualizar el enlace del nodo anterior
+                    Cm->poner_dato(prevC, "->sig", temp);
+                } else {
+                    // Si el nodo eliminado era el primero de la fila, actualizar el enlace de la fila
+                    Cm->poner_dato(dirF, "->sig", temp);
+                }
+                // Eliminar el nodo actual
+                Cm->Delete_espacio(dirC);
+                // Continuar con el siguiente nodo
+                dirC = temp;
+            } else {
+                prevC = dirC;
+                dirC = Cm->obtenerDato(dirC, "->sig");
+            }
+        }
+        // Si el último nodo de la fila ha sido eliminado, establecer el enlace de la fila en -1
+        if (Cm->obtenerDato(dirF, "->sig") == NULO) {
+            // Si la fila eliminada no era la primera fila
+            if (prevF != NULO) {
+                // Actualizar el enlace de la fila anterior
+                Cm->poner_dato(prevF, "->sig", Cm->obtenerDato(dirF, "->sig"));
+            } else {
+                // Si la fila eliminada era la primera fila, actualizar el enlace de la matriz
+                PtrMatD = Cm->obtenerDato(dirF, "->sig");
+            }
+            // Eliminar la fila actual
+            int tempF = Cm->obtenerDato(dirF, "->sig");
+            Cm->Delete_espacio(dirF);
+            dirF = tempF;
+            continue;
+        }
+        prevF = dirF;
+        dirF = Cm->obtenerDato(dirF, "->sig");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+void MatrizDispersa::Definir_valor_repetido(int valor){
+	if (Cm->Espacio_ocupado()==0) {
+		rep=valor;
+	} else {
+		std::vector<int> nodosAEliminar;
+		 int p= Elemento(1, 1);    int a= Elemento(1, 1);
+        // Recorrer todas las filas y columnas
+        for (int i = 1; i <= dimf; i++) {
+            for (int j = 1; j <= dimc; j++) {
+				// Si el valor en la posición actual es igual al nuevo valor repetido
+				if (Elemento(i, j) == rep) {
+                    // Añadir la dirección del nodo a la lista de nodos a eliminar
+				  int z= Elemento(i, j);// nodosAEliminar.push_back(buscar(i, j));
+				   poner(i,j,Elemento(i,j));
+				}
+			}
+		}
+		eliminarSiIgual(valor);
+		rep = valor;
+	}
+}
+
+
+	int MatrizDispersa::Elemento(int f, int c) {
+	if (f >= 1 && f <= dimf && c >= 1 && c <= dimc) {
+		// Buscar si existe f,c en los nodos
+		int dir = buscar(f, c);
+		if (dir != NULO) {
+            // Si el nodo existe, retornar el dato
+			return Cm->obtenerDato(dir, "->dato");
+        } else {
+            // Si el nodo no existe, retornar el valor repetido
+            return rep;
+		}
+	}
+	// Retornar un valor por defecto si f o c están fuera de los límites
+	// Puedes ajustar este valor según tus necesidades
+	//return 0;
+}
+
+
+
+void MatrizDispersa::imprimir(TColor FormColor, TCanvas *Canvas) {
+	// Obtén las dimensiones del Canvas
+	int canvasWidth = Canvas->ClipRect.Width();
+	int canvasHeight = Canvas->ClipRect.Height();
+
+	// Calcula el tamaño de cada celda de la matriz en el Canvas
+	int cellWidth = 40; // Ahora la matriz ocupará 1/3 del ancho del Canvas
+	int cellHeight = 30;
+
+	// Asegúrate de que el Canvas esté limpio
+
+
+	// Cambia el color del pincel para dibujar la matriz
+	Canvas->Pen->Color = clBlack; // Solo cambia el color del lápiz, no el del pincel
+
+	// Calcula el desplazamiento para centrar la matriz en el Canvas
+	int offsetX = (canvasWidth - dimc * cellWidth) / 2;
+	int offsetY = (canvasHeight - dimf * cellHeight) / 2;
+
+	// Recorre la matriz y dibuja cada celda
+	for (int i = 0; i < dimf; i++) {
+		for (int j = 0; j < dimc; j++) {
+			// Calcula la posición de esta celda en el Canvas
+			int x = offsetX + j * cellWidth;
+			int y = offsetY + i * cellHeight;
+
+            // Dibuja la celda
+			Canvas->Rectangle(x, y, x + cellWidth, y + cellHeight);
+
+			// Dibuja el valor de la celda
+            int valor = Elemento(i+1, j+1); // Asume que los índices de la matriz comienzan en 1
+			Canvas->Font->Color = clBlack; // Cambia el color del texto a negro
+			Canvas->TextOutW(x + cellWidth / 2, y-10+ cellHeight / 2, IntToStr(valor));
+		}
+	}
+}
+

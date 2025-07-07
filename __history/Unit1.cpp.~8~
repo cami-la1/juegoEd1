@@ -1,0 +1,238 @@
+//---------------------------------------------------------------------------
+
+#include <vcl.h>
+#pragma hdrstop
+
+#include "Unit1.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+#pragma resource "*.dfm"
+TForm1 *Form1;
+//---------------------------------------------------------------------------
+__fastcall TForm1::TForm1(TComponent* Owner)
+	: TForm(Owner)
+{
+}
+//---------------------------------------------------------------------------
+
+// Unit1.cpp
+
+void __fastcall TForm1::FormKeyDown(TObject *Sender, WORD &Key, TShiftState Shift)
+{
+    // Manejo de Deshacer (sigue igual)
+    if (Shift.Contains(ssCtrl) && Key == 'Z') {
+        if (control_juego != nullptr) {
+            control_juego->deshacerMovimiento();
+            Invalidate();
+        }
+        return; // Salimos para no procesar la tecla 'Z' como movimiento
+    }
+
+    // Nueva lógica: Meter el COMANDO (la tecla) en la cola de prioridad correcta
+    if (cola_turnos != nullptr) {
+        switch (Key) {
+            // Teclas del Jugador 1 -> Van a la cola de prioridad 0
+            case 'W': case 'S': case 'A': case 'D':
+                cola_turnos->poner(Key, 0); // Mete el código de la tecla en la cola 0
+                break;
+
+            // Teclas del Jugador 2 -> Van a la cola de prioridad 1
+            case VK_UP: case VK_DOWN: case VK_LEFT: case VK_RIGHT:
+                cola_turnos->poner(Key, 1); // Mete el código de la tecla en la cola 1
+                break;
+        }
+    }
+}
+//---------------------------------------------------------------------------
+// Unit1.cpp
+
+// Unit1.cpp
+
+void __fastcall TForm1::FormCreate(TObject *Sender)
+{
+	// 1. Crear la memoria principal
+	memoria_principal = new CSmemoria();
+	cola_de_teclas = new colaV1();
+
+	// 2. Crear las estructuras de datos usando la memoria
+   matriz_juego = new MatrizCC();
+   //matriz_juego = new MatrizDispersaptr();
+	pila_movimientos = new pilaM(memoria_principal);
+	cola_turnos = new ColaPri();
+
+	// 3. Crear y cargar el mapa
+	Mapa creador_de_mapa;
+	// La siguiente línea es redundante porque cargarMapaInicial ya lo hace, pero no causa daño.
+	// matriz_juego->dimensionar(10,10);
+	creador_de_mapa.cargarMapaInicial(matriz_juego, 10, 10);
+
+
+
+	// 4. Crear el controlador del juego y pasarle todas las estructuras que necesita
+	control_juego = new ControlJuego(matriz_juego, cola_turnos, pila_movimientos);
+	// Le pedimos que encuentre las coordenadas iniciales de los jugadores en el mapa
+	control_juego->encontrarPosicionInicialJugadores();
+	// --- FIN DE LAS LÍNEAS FALTANTES ---
+
+
+	// 5. Configurar la cola de turnos
+	cola_turnos->asignarFrecuenciaPrioridad(1, 0); // J1
+	cola_turnos->asignarFrecuenciaPrioridad(1, 1); // J2
+	cola_turnos->poner(1, 0); // Turno para Jugador 1
+	cola_turnos->poner(2, 1); // Turno para Jugador 2
+
+	// 6. Preparar la ventana y forzar el primer pintado
+	this->WindowState = wsMaximized;
+	Invalidate();
+}
+// Unit1.cpp
+
+// Unit1.cpp
+
+void __fastcall TForm1::FormPaint(TObject *Sender)
+{
+    // --- PARTE 1: DIBUJAR EL MAPA DEL JUEGO (código existente) ---
+
+	if (matriz_juego == nullptr) return;
+
+	int dim_filas = matriz_juego->dimension_Fila();
+	int dim_columnas = matriz_juego->dimension_columna();
+
+	if (dim_filas == 0 || dim_columnas == 0) return;
+
+	int canvasWidth = this->Canvas->ClipRect.Width();
+	int canvasHeight = this->Canvas->ClipRect.Height();
+	int cellWidth = 40;
+	int cellHeight = 30;
+	int offsetX = (canvasWidth - dim_columnas * cellWidth) / 2;
+	int offsetY = (canvasHeight - dim_filas * cellHeight) / 2;
+
+    for (int i = 1; i <= dim_filas; i++) {
+        for (int j = 1; j <= dim_columnas; j++) {
+			int valor = matriz_juego->Elemento(i, j);
+			int x = offsetX + (j - 1) * cellWidth;
+			int y = offsetY + (i - 1) * cellHeight;
+
+			switch (valor) {
+				case 1: Canvas->Brush->Color = clYellow; break;
+				case 3: Canvas->Brush->Color = clLime;   break;
+				case 4: Canvas->Brush->Color = clGreen;  break;
+				case 5: Canvas->Brush->Color = clRed;    break;
+				case 6: Canvas->Brush->Color = clBlue;   break;
+				default: Canvas->Brush->Color = clWhite; break;
+			}
+            this->Canvas->Rectangle(x, y, x + cellWidth, y + cellHeight);
+            this->Canvas->Font->Color = clBlack;
+            TSize textSize = this->Canvas->TextExtent(IntToStr(valor));
+            int textX = x + (cellWidth - textSize.cx) / 2;
+            int textY = y + (cellHeight - textSize.cy) / 2;
+            this->Canvas->TextOut(textX, textY, IntToStr(valor));
+        }
+    }
+
+    // --- PARTE 2: DIBUJAR EL PANEL DE INFORMACIÓN (código nuevo) ---
+
+    // Calculamos la posición inicial para el texto, a la derecha del mapa.
+    int infoX = offsetX + (dim_columnas * cellWidth) + 50; // 50 píxeles de margen
+    int infoY = offsetY;
+
+	// Preparamos la fuente del texto
+	Canvas->Font->Color = clBlack;
+	Canvas->Font->Size = 10;
+	Canvas->Font->Name = "Arial";
+	Canvas->Brush->Style = bsClear; // Fondo transparente para el texto
+
+	// Título del panel
+	Canvas->Font->Style = TFontStyles() << fsBold << fsUnderline;
+	Canvas->TextOut(infoX, infoY, "DATOS DE LA PARTIDA");
+	infoY += 30; // Espacio después del título
+
+    // Información de Frecuencias de Jugadores
+    Canvas->Font->Style = TFontStyles() << fsBold;
+    Canvas->TextOut(infoX, infoY, "Frecuencia de Movimientos:");
+    infoY += 20;
+	Canvas->Font->Style = TFontStyles(); // Quitar negrita
+
+	if (cola_turnos != nullptr) {
+		String j1_info = "Jugador 1 (Rojo): " + IntToStr(cola_turnos->obtenerFrecuencia(0)) + " movs/turno";
+		Canvas->TextOut(infoX, infoY, j1_info);
+		infoY += 20;
+
+		String j2_info = "Jugador 2 (Azul): " + IntToStr(cola_turnos->obtenerFrecuencia(1)) + " movs/turno";
+		Canvas->TextOut(infoX, infoY, j2_info);
+	}
+	infoY += 25; // Espacio
+
+	// Leyenda de Frutas
+	Canvas->Font->Style = TFontStyles() << fsBold;
+	Canvas->TextOut(infoX, infoY, "Leyenda de Frutas:");
+	infoY += 20;
+	Canvas->Font->Style = TFontStyles();
+
+	Canvas->Brush->Color = clLime; // Pera
+	Canvas->Rectangle(infoX, infoY, infoX + 20, infoY + 20);
+		Canvas->Brush->Color = Form1->Color;
+	Canvas->TextOut(infoX + 25, infoY + 4, "Pera (3): +2 movs/turno");
+	infoY += 25;
+
+	Canvas->Brush->Color = clGreen; // Manzana
+	Canvas->Rectangle(infoX, infoY, infoX + 20, infoY + 20);
+		Canvas->Brush->Color = Form1->Color;
+	Canvas->TextOut(infoX + 25, infoY + 4, "Manzana (4): +1 mov/turno");
+	infoY += 25; // Espacio
+
+	// Leyenda de Controles
+	Canvas->Font->Style = TFontStyles() << fsBold;
+	Canvas->TextOut(infoX, infoY, "Controles:");
+    infoY += 20;
+    Canvas->Font->Style = TFontStyles();
+    Canvas->TextOut(infoX, infoY, "Jugador 1 (Rojo): W, A, S, D");
+    infoY += 20;
+	Canvas->TextOut(infoX, infoY, "Jugador 2 (Azul): Flechas de Direccion"); //matriz_juego->DibujarVectores(Canvas,100,100);
+}//---------------------------------------------------------------------------
+
+
+// Unit1.cpp
+
+void __fastcall TForm1::Timer1Timer(TObject *Sender)
+{
+	int tecla_a_procesar;
+
+	// Si la Cola de Prioridad logra sacar un turno (respetando las frecuencias)...
+	if (cola_turnos != nullptr && cola_turnos->sacar(tecla_a_procesar))
+	{
+		// ... se lo pasamos al controlador del juego para que lo ejecute.
+		if (control_juego != nullptr) {
+			control_juego->procesarInput(tecla_a_procesar);
+		}
+
+		// Y mandamos a redibujar para ver el resultado.
+		Invalidate();
+    }
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Timer2Timer(TObject *Sender)
+{
+	int tecla_a_procesar;
+
+	// Si la Cola de Prioridad logra sacar un turno (respetando las frecuencias)...
+	if (cola_turnos != nullptr && cola_turnos->sacar(tecla_a_procesar))
+	{
+		// ... se lo pasamos al controlador del juego para que lo ejecute.
+		if (control_juego != nullptr) {
+			control_juego->procesarInput(tecla_a_procesar);
+		}
+
+		// Y mandamos a redibujar para ver el resultado.
+		Invalidate();
+	}
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::Button1Click(TObject *Sender)
+{
+Timer2->Enabled=true;
+}
+//---------------------------------------------------------------------------
+

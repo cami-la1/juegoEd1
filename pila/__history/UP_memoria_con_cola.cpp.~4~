@@ -1,0 +1,61 @@
+	//---------------------------------------------------------------------------
+
+	#pragma hdrstop
+
+#include "UP_memoria_con_cola.h"
+
+	//---------------------------------------------------------------------------
+	#pragma package(smart_init)
+	pilaMC::pilaMC() {
+		 pe=-1;
+
+	// Cm = new CSmemoria();
+	}
+	pilaMC::pilaMC(CSmemoria* m) {
+	 pe=-1;
+	 longitud=0;
+	 Cm= m;
+	}
+
+	bool pilaMC::Vacia(){
+	return (longitud==0) ;
+	}
+
+	void pilaMC ::Meter(dir e){
+	int dir=Cm->new_espacio("elemento,sig");
+	if (dir!=NULO) {
+		 Cm->poner_dato(dir,elementNL ,e);
+			 Cm->poner_dato(dir, sigNL ,pe) ;
+		 pe=dir;
+
+		longitud++;
+	}
+	}
+
+
+	void pilaMC::Sacar(dir& e){
+		   if (Vacia()==false) {
+		   int z=pe;
+				e = Cm->obtenerDato(pe,elementNL) ;// Assigning the top element to e
+		pe=Cm->obtenerDato(pe, sigNL); // Moving the top pointer to the next element
+			Cm->Delete_espacio(z);  // Deleting the previous top element
+		longitud--;
+		   }
+
+	}
+	dir pilaMC::cima() {
+		if (Vacia()) {
+			// Handle error: Stack is empty
+			return -1;  // Return an error value or throw an exception
+		} else {
+			return Cm->obtenerDato(pe,elementNL); // Return the top element
+		}
+	}
+
+
+	 void pilaMC::imprimir(TColor FormColor, TCanvas *Canvas){
+		 Cm->ImprimirPantalla2(FormColor, Canvas,1150,600);
+	 }
+
+
+

@@ -1,0 +1,46 @@
+// jugador.h
+#ifndef jugadorH
+#define jugadorH
+//---------------------------------------------------------------------------
+// Incluimos las definiciones de las estructuras de datos que ControlJuego necesita manipular.
+#include "Matriz_1N.h"
+#include "ColaPrioridad.h"
+#include "UP_memoria.h"
+
+// Definimos la clase que contendrá toda la lógica del juego.
+class ControlJuego {
+private:
+    // --- ATRIBUTOS ---
+
+    // Punteros a las estructuras de datos principales que el juego utiliza.
+    MatrizDispersa* mapa;
+    ColaPri* cola_de_turnos;
+    pilaM* pila_undo;
+
+    // Coordenadas actuales de los jugadores para no tener que buscarlas cada vez.
+    int p1_fila, p1_col;
+    int p2_fila, p2_col;
+
+    // --- MÉTODOS PRIVADOS ---
+
+    // Método interno que contiene la lógica de colisión y actualización del mapa.
+    // Es privado porque solo será llamado desde dentro de esta clase.
+    void intentarMover(int jugador, int nueva_fila, int nueva_col);
+
+public:
+    // --- MÉTODOS PÚBLICOS ---
+
+    // Constructor: Se le pasarán los punteros a los objetos ya creados en el formulario.
+    ControlJuego(MatrizDispersa* m, ColaPri* c, pilaM* p);
+
+    // Método para escanear el mapa al inicio y encontrar las posiciones de los jugadores.
+    void encontrarPosicionInicialJugadores();
+
+    // Método principal que recibe la tecla presionada y orquesta la acción del turno.
+    void procesarInput(WORD tecla);
+
+    // Método para revertir el último movimiento usando la pila.
+    void deshacerMovimiento();
+};
+//---------------------------------------------------------------------------
+#endif

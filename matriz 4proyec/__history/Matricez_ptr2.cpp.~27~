@@ -1,0 +1,230 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+
+#include "Matricez_ptr2.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+     // Constructor
+Matrizptr2::Matrizptr2() {
+	PtrFil = nullptr;
+
+    dimf = 0;
+	dimc = 0;
+    rep = 0;
+}
+
+// Dimensionar la matriz
+void Matrizptr2::dimensionar(int df, int dc) {
+    dimf = df;
+	dimc = dc;
+}
+
+// Obtener la dimensión de la fila
+int Matrizptr2::dimension_Fila() {
+    return dimf;
+}
+
+// Obtener la dimensión de la columna
+int Matrizptr2::dimension_columna() {
+    return dimc;
+}
+  void Matrizptr2::poner(int f, int c, int valor) {
+    // First, find the row
+	NodoFh* row = PtrFil;
+	while (row != nullptr && row->Fila != f) {
+		row = row->SigF;
+    }
+
+    // If the row doesn't exist, create it
+	if (row == nullptr) {
+		row = new NodoFh;
+		row->Fila = f;
+		row->SigF = PtrFil;
+        row->PtrCol=nullptr;
+		PtrFil = row;
+	}
+
+	// Now, find the column in the row
+	NodoCh* col =row->PtrCol;
+    NodoCh* prevCol = nullptr;
+	while (col != nullptr) {
+	if ( col->Col != c) {
+        prevCol = col;
+		col = col->SigCol;
+	}
+
+	}
+
+    // If the column doesn't exist, create it
+    if (col == nullptr) {
+        col = new NodoCh;
+		col->Col = c;
+        col->Dato = valor;
+
+        // Insert the new column at the correct position
+        if (prevCol == nullptr) {
+            // This is the first column in the row
+            row->PtrCol = col;
+		} else {
+            // This is not the first column in the row
+            prevCol->SigCol = col;
+        }
+    } else {
+        // The column already exists, just update the value
+        col->Dato = valor;
+	}
+}
+
+
+	 // Obtener un elemento de la matriz
+int Matrizptr2::Elemento(int f, int c) {
+	// First, find the row
+	NodoFh* row = PtrFil;
+	while (row != nullptr) {
+
+	   if (	row->Fila != f){ row = row->SigF;}
+	}
+
+	// If the row doesn't exist, return the repeated value
+	if (row == nullptr) {
+		return rep;
+	}
+
+	// Now, find the column in the row
+	NodoCh* col = row->PtrCol;
+	while (col != nullptr ) {
+	if ( col->Col != c) {
+				col = col->SigCol;
+	}
+
+	}
+
+	// If the column doesn't exist, return the repeated value
+	if (col == nullptr) {
+		return rep;
+	}
+
+	// The element exists, return its value
+	return col->Dato;
+}
+
+
+
+void Matrizptr2::eliminarSiIgual(int valor) {
+	NodoFh* prevF = nullptr;
+	NodoFh* dirF = PtrFil;
+	while (dirF != nullptr) {
+        NodoCh* prevC = nullptr;
+        NodoCh* dirC = dirF->PtrCol;
+        while (dirC != nullptr) {
+            if (dirC->Dato == valor) {
+                NodoCh* tempC = dirC->SigCol;
+                if (prevC != nullptr) {
+                    prevC->SigCol = tempC;
+                } else {
+                    dirF->PtrCol = tempC;
+                }
+                delete dirC;
+                dirC = tempC;
+            } else {
+                prevC = dirC;
+                dirC = dirC->SigCol;
+            }
+        }
+        if (dirF->PtrCol == nullptr) {
+            NodoFh* tempF = dirF->SigF;
+            if (prevF != nullptr) {
+                prevF->SigF = tempF;
+            } else {
+                PtrFil = tempF;
+            }
+            delete dirF;
+            dirF = tempF;
+        } else {
+            prevF = dirF;
+            dirF = dirF->SigF;
+        }
+    }
+}
+
+void Matrizptr2::Definir_valor_repetido(int valor) {
+
+	 if (PtrFil ==nullptr) {
+         	rep = valor;
+	 }else{
+	  for (int i = 1; i <= dimf; i++) {
+			for (int j = 1; j <= dimc; j++) {
+					NodoFh* row = PtrFil;
+            while (row != nullptr && row->Fila != i) {
+                row = row->SigF;
+            }
+            NodoCh* col = nullptr;
+            if (row != nullptr) {
+                col = row->PtrCol;
+                while (col != nullptr && col->Col != j) {
+                    col = col->SigCol;
+                }
+			}
+			int z = (col != nullptr) ? col->Dato : rep;// Si el valor en la posición actual es igual al nuevo valor repetido
+				if( z == rep) {
+                    // Añadir la dirección del nodo a la lista de nodos a eliminar
+				 // nodosAEliminar.push_back(buscar(i, j));
+				   poner(i,j,z);
+				}
+			}
+		}
+	 }
+		eliminarSiIgual(valor) ;
+		rep = valor;
+	 }
+
+
+void Matrizptr2::imprimir(TColor FormColor, TCanvas *Canvas) {
+    // Get the dimensions of the Canvas
+    int canvasWidth = Canvas->ClipRect.Width();
+    int canvasHeight = Canvas->ClipRect.Height();
+
+    // Calculate the size of each cell in the matrix on the Canvas
+    int cellWidth = 40;
+    int cellHeight = 30;
+
+    // Calculate the offset to center the matrix on the Canvas
+    int offsetX = (canvasWidth - dimc * cellWidth) / 2;
+    int offsetY = (canvasHeight - dimf * cellHeight) / 2;
+
+    // Ensure the Canvas is clean
+    Canvas->Brush->Color = FormColor;
+    Canvas->FillRect(TRect(0, 0, canvasWidth, canvasHeight));
+
+    // Change the brush color to draw the matrix
+    Canvas->Pen->Color = clBlack; // Only change the pen color, not the brush color
+
+    // Go through all the cells of the matrix
+    for (int i = 1; i <= dimf; i++) {
+        for (int j = 1; j <= dimc; j++) {
+            // Calculate the position of the cell
+            int x = offsetX + (j - 1) * cellWidth;
+            int y = offsetY + (i - 1) * cellHeight;
+
+            // Draw the cell's rectangle
+            Canvas->Rectangle(x, y, x + cellWidth, y + cellHeight);
+
+            // Draw the value of the cell if it exists, otherwise draw the value of 'rep'
+			NodoFh* row = PtrFil;
+            while (row != nullptr && row->Fila != i) {
+                row = row->SigF;
+            }
+            NodoCh* col = nullptr;
+            if (row != nullptr) {
+                col = row->PtrCol;
+                while (col != nullptr && col->Col != j) {
+                    col = col->SigCol;
+                }
+			}
+            int valor = (col != nullptr) ? col->Dato : rep;
+            Canvas->Font->Color = clBlack; // Change the text color to black
+            Canvas->TextOutW(x + cellWidth / 2, y -10+ cellHeight / 2, IntToStr(valor));
+        }
+    }
+}

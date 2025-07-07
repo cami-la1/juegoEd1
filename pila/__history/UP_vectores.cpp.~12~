@@ -1,0 +1,30 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+
+#include "UP_vectores.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+	pilav:: pilav(){
+	   tope=0;
+	}
+	bool pilav::Vacia(){
+     return (tope==0);
+	}
+	void pilav::Meter(int e){
+	 if (tope<MAXXX) {
+	   tope=tope+1;
+       elementos[tope]=e;
+	 }
+	}
+	void pilav::Sacar(int &e){
+	 if (Vacia()==false) {
+	  e=elementos[tope];
+      tope--;
+	 }
+	}
+	int pilav::cima(){
+	 if (Vacia()==false) {
+      return elementos[tope];
+	 }
+	}

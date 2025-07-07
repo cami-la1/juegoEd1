@@ -1,0 +1,85 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+
+#include "Matricez_ptr1.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+  // Constructor
+MatrizDispersaptr::MatrizDispersaptr() {
+    PtrMatD = nullptr;
+    dimf = 0;
+    dimc = 0;
+    rep = 0;
+}
+
+// Métodos
+void MatrizDispersaptr::dimensionar(int nf, int nc) {
+    dimf = nf;
+    dimc = nc;
+}
+
+int MatrizDispersaptr::dimension_Fila() {
+    return dimf;
+}
+
+int MatrizDispersaptr::dimension_columna() {
+    return dimc;
+}
+
+ Nodo* MatrizDispersaptr::buscar(int f, int c) {
+    Nodo* ptr = PtrMatD;
+    while (ptr != nullptr) {
+        if (ptr->Fila == f && ptr->Col == c) {
+            return ptr;
+        }
+        ptr = ptr->Sig;
+    }
+    return nullptr;  // Retorna nullptr si no se encuentra el nodo
+}
+
+  void MatrizDispersaptr::poner(int f, int c, int valor) {
+    // Buscar si existe f,c en los nodos
+    Nodo* dir = buscar(f, c);
+    if (dir == nullptr) {
+        Nodo* x = new Nodo;
+        if (x != nullptr) {
+            x->Fila = f;
+            x->Col = c;
+            x->dato = valor;
+            x->Sig = PtrMatD;
+            PtrMatD = x;
+
+        } else {
+            // Error no existe espacio memoria
+            std::cerr << "Error: No hay suficiente espacio de memoria." << std::endl;
+        }
+    } else {
+        dir->dato = valor;
+        if (valor == rep) {
+            // Eliminar nodo
+		delete(dir);
+
+        }
+    }
+}
+ int MatrizDispersaptr::Elemento(int f, int c) {
+    if (f >= 1 && f <= dimf && c >= 1 && c <= dimc) {
+        Nodo* dir = buscar(f, c);
+        if (dir != nullptr) {
+            return dir->dato;
+        } else {
+            return rep;
+        }
+    } else {
+        std::cerr << "Error: Los índices están fuera de rango." << std::endl;
+        return -1;
+    }
+}
+
+void MatrizDispersaptr::Definir_valor_repetido(int valor) {
+    rep = valor;
+    // Este algoritmo no considera si este método es llamado en tiempo de ejecución
+    // Para manejar esto, podrías necesitar reevaluar los elementos en la matriz y realizar ajustes según sea necesario.
+}
+

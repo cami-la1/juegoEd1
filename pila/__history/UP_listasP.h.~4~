@@ -1,0 +1,22 @@
+//---------------------------------------------------------------------------
+
+#ifndef UP_listasPH
+#define UP_listasPH
+#include "UPlista.h"
+//---------------------------------------------------------------------------
+
+class pilal_P {
+private:
+
+
+public:
+	pilal_P();
+
+
+  bool Vacia();
+  void Meter(int e);
+  void Sacar(int e);
+  int cima();
+ void imprimir(TColor FormColor, TCanvas *Canvas);
+};
+	 #endif

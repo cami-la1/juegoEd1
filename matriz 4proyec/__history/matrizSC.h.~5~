@@ -1,0 +1,26 @@
+//---------------------------------------------------------------------------
+
+#ifndef matrizSCH
+#define matrizSCH
+static const int MAX = 100;
+//---------------------------------------------------------------------------
+class MatrizSC {
+public:
+    // Atributos
+    int Vf[MAX]; // filas
+    int VC[MAX]; // Columnas
+    int VD[MAX]; // elementos
+    int df, dc; // Dimensión
+    int repe; // es el elemento que se repetirá en la matriz
+    int nt;
+    MatrizSC();
+    // Métodos
+    void Crear();
+    void dimensionar(int df, int dc);
+    int dimension_Fila();
+    int dimension_columna();
+    void poner(int f, int c, int valor);
+    int Elemento(int f, int c);
+    void definir_valor_repetido(int valor);
+};
+#endif

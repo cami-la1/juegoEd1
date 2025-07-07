@@ -1,0 +1,206 @@
+	//---------------------------------------------------------------------------
+
+	#pragma hdrstop
+
+	#include "pila_para_infija.h"
+#include "Umemoria.h"
+	//---------------------------------------------------------------------------
+	#pragma package(smart_init)
+	pilaMM::pilaMM() {
+		 pe=-1;
+
+	// Cm = new CSmemoria();
+	}
+	pilaMM::pilaMM(CSmemoria* m) {
+	 pe=-1;
+	 longitud=0;
+	 Cm= m;
+	}
+
+	bool pilaMM::Vacia(){
+	return (longitud==0) ;
+	}
+
+	void pilaMM ::Meter(dirr e){
+	int dirr=Cm->new_espacio("elemento,sig");
+	if (dirr!=NULO) {
+		 Cm->poner_dato(dirr,elementNL ,e);
+			 Cm->poner_dato(dirr, sigNL ,pe) ;
+		 pe=dirr;
+
+		longitud++;
+	}
+	}
+
+
+	void pilaMM::Sacar(dirr& e){
+		   if (Vacia()==false) {
+		   int z=pe;
+				e = Cm->obtenerDato(pe,elementNL) ;// Assigning the top element to e
+		pe=Cm->obtenerDato(pe, sigNL); // Moving the top pointer to the next element
+			Cm->Delete_espacio(z);  // Deleting the previous top element
+		longitud--;
+		   }
+
+	}
+	dirr pilaMM::cima() {
+		if (Vacia()) {
+			// Handle error: Stack is empty
+			return -1;  // Return an error value or throw an exception
+		} else {
+			return Cm->obtenerDato(pe,elementNL); // Return the top element
+		}
+	}
+
+
+	 void pilaMM::imprimir(TColor FormColor, TCanvas *Canvas){
+		 Cm->ImprimirPantalla2(FormColor, Canvas,1150,600);
+	 }
+
+
+	//--------------------------------
+	//----------aplicacion1----------
+
+
+	 float pilaMM::Evalua(float Op1, char Operador, float Op2) {
+		switch (Operador) {
+			case '^': return pow(Op1, Op2);
+			case '*': return Op1 * Op2;
+			case '/': return Op1 / Op2;
+			case '+': return Op1 + Op2;
+			case '-': return Op1 - Op2;
+			default:
+				throw Exception("Operador desconocido");
+		}
+	}
+	float pilaMM::EvaluarPostfija(const String& ExpPostfija) {
+		for (int i = 1; i <= ExpPostfija.Length(); ++i) {
+			char ch = ExpPostfija[i];
+			if (isdigit(ch)) { // Si es un operando
+				Meter(ch - '0'); // Convertir char a int y meter en la pila
+			} else { // Si es un operador
+				dirr Op2, Op1;
+				Sacar(Op2);
+				Sacar(Op1);
+				float Z = Evalua(Op1, ch, Op2);
+				Meter(Z);
+			}
+		}
+		return cima(); // Resultado final de la evaluación
+	}
+int pilaMM::PrioridadInfija(char c) {
+	switch (c) {
+		case '^': return 4;
+		case '*': return 2;
+		case '/': return 2;
+		case '+': return 1;
+		case '-': return 1;
+		case '(': return 5;
+		default: return 0;
+	}
+}
+int pilaMM::PrioridadPila(char c) {
+	switch (c) {
+		case '^': return 3;
+		case '*': return 2;
+		case '/': return 2;
+		case '+': return 1;
+		case '-': return 1;
+        case '(': return 0;
+		default: return 0;
+	}
+}
+
+String pilaMM::InfijaToPostfija2(const String& Infija, TColor FormColor, TCanvas* Canvas) {
+    String Postfija = "";
+    String numero = ""; // Acumula dígitos para números de varios dígitos
+
+    for (int i = 1; i <= Infija.Length(); ++i) {
+        char ch = Infija[i];
+        if (isdigit(ch)) { // Si es un dígito, acumulamos en `numero`
+            numero += ch;
+        } else {
+            if (!numero.IsEmpty()) { // Si hay un número acumulado, agrégalo
+                Postfija += numero + " ";
+                Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+                ShowMessage("Número agregado a la postfija: " + numero + ". Presiona Enter para continuar...");
+                numero = "";
+            }
+            if (ch == '(') { // Si es un paréntesis izquierdo
+                Meter(static_cast<dirr>(ch)); // Convertir `char` a `int` explícitamente
+                Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+                ShowMessage("Paréntesis izquierdo insertado en la pila: " + UnicodeString(ch) + ". Presiona Enter para continuar...");
+            } else if (ch == ')') { // Si es un paréntesis derecho
+                dirr aux;
+                while (true) {
+                    Sacar(aux);
+                    if (static_cast<char>(aux) == '(') break; // Reconversión de `int` a `char`
+                    Postfija += static_cast<char>(aux);
+                }
+                Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+                ShowMessage("Paréntesis derecho procesado. Presiona Enter para continuar...");
+            } else { // Si es un operador
+                while (!Vacia() && PrioridadInfija(ch) <= PrioridadPila(static_cast<char>(cima()))) {
+                    dirr aux;
+                    Sacar(aux);
+                    Postfija += static_cast<char>(aux);
+                    Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+                    ShowMessage("Operador sacado de la pila: " + UnicodeString(static_cast<char>(aux)) + ". Presiona Enter para continuar...");
+                }
+                Meter(static_cast<dirr>(ch)); // Convertir `char` a `int`
+                Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+                ShowMessage("Operador insertado en la pila: " + UnicodeString(ch) + ". Presiona Enter para continuar...");
+            }
+        }
+    }
+
+    if (!numero.IsEmpty()) { // Si queda un número pendiente, agrégalo
+        Postfija += numero + " ";
+        Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+        ShowMessage("Número pendiente agregado a la postfija: " + numero + ". Presiona Enter para continuar...");
+    }
+
+    while (!Vacia()) { // Vaciar la pila al final
+        dirr aux;
+        Sacar(aux);
+        Postfija += static_cast<char>(aux);
+        Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+        ShowMessage("Operador sacado al vaciar la pila: " + UnicodeString(static_cast<char>(aux)) + ". Presiona Enter para continuar...");
+    }
+
+    return Postfija;
+}
+
+
+float pilaMM::EvaluarPostfija2(const String& ExpPostfija, TColor FormColor, TCanvas* Canvas) {
+    String numero = ""; // Para acumular caracteres de números de varios dígitos
+
+    for (int i = 1; i <= ExpPostfija.Length(); ++i) {
+        char ch = ExpPostfija[i];
+        if (isdigit(ch) || ch == '.') { // Acumular número con punto decimal
+            numero += ch;
+        } else if (ch == ' ' && !numero.IsEmpty()) { // Fin de un número
+            Meter(StrToFloat(numero));
+            Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+            ShowMessage("Número insertado en la pila: " + numero + ". Presiona Enter para continuar...");
+            numero = "";
+        } else if (strchr("+-*/^", ch)) { // Si es un operador
+            dirr Op2, Op1;
+            Sacar(Op2);
+            Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+            ShowMessage("Operando 2 sacado: " + UnicodeString(Op2) + ". Presiona Enter para continuar...");
+            Sacar(Op1);
+            Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+            ShowMessage("Operando 1 sacado: " + UnicodeString(Op1) + ". Presiona Enter para continuar...");
+            float Z = Evalua(Op1, ch, Op2);
+            Meter(Z);
+            Cm->ImprimirPantalla2(FormColor, Canvas, 1150, 600);
+            ShowMessage("Resultado insertado en la pila: " + UnicodeString(Z) + ". Presiona Enter para continuar...");
+        }
+    }
+
+    Cm->ImprimirPantalla2(clWhite, Canvas, 1150, 600);
+    ShowMessage("Resultado final en la cima de la pila. Presiona Enter para continuar...");
+    return cima();
+}
+

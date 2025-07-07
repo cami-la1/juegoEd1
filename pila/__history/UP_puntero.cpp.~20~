@@ -1,0 +1,57 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+
+#include "UP_puntero.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+ptr_pila::ptr_pila(){
+cant=0;
+ptrp=nullptr;
+} bool ptr_pila::vacio(){
+  return (cant==0);
+}
+
+int  ptr_pila::recupera(Nodop* d)
+{if (!vacio()){
+return d->dato;
+}else{ return -1 ;}}
+
+
+
+	Nodop* ptr_pila::primero(){
+	if (!vacio()) {
+	return ptrp;
+}else{ return nullptr ;}
+	}
+
+	Nodop* ptr_pila::fin(){
+if (vacio()) {
+   return nullptr ;//cout<<"ERROR/FIN():LISTA VACIA";
+}else{
+Nodop* x= ptrp;
+Nodop* ptrfin;
+	while (x != nullptr){
+	ptrfin=x;
+    x=x->sig;
+	}
+	return ptrfin;
+}
+}
+
+ void ptr_pila::Sacar(int &e){
+ Nodop* p=primero();
+
+ e=recupera(p);
+ cant--;
+ delete p;
+ }
+  void ptr_pila::Meter(int e){
+  Nodop* x=new Nodop;
+if (x!=nullptr) {
+	x->dato=e;
+	x->sig=ptrp;
+	cant++;
+	ptrp=x;
+}
+  }

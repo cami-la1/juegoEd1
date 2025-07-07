@@ -1,0 +1,37 @@
+//---------------------------------------------------------------------------
+
+#ifndef UP_punteroH
+#define UP_punteroH
+//---------------------------------------------------------------------------
+
+using namespace std;
+
+//defino a direccionL como un struct
+struct Nodop {
+	int dato;
+	Nodop* sig;
+};
+
+class ptr_pila{
+	private:
+	Nodop* ptrp;
+	 ptr_pila();
+	int cant;
+	Nodop* localiza(int e);
+	Nodop* anterior(NodoConj *p);
+	public:
+
+	void crear();
+	 bool vacio();
+	 bool pertenece(int e);
+	 void inserta (int e );
+	 void suprime(int e);
+	 int cardinal();
+	 int ordinal(int e)   ;
+	 int muestrea();
+  int elemento(int pos) ;
+	void imprimir(TColor FormColor, TCanvas *Canvas);
+	 void Pintado(int posX, int posY, String cad, TColor color, TCanvas *Canvas);
+
+};
+#endif

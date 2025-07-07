@@ -1,0 +1,191 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+
+#include "UVLista.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+Vlista::Vlista(){
+longitud=0;
+}
+int Vlista::fin(){
+	if (!vacia()) {
+	return longitud;
+	}else{cout<<"EROOR/lista vacia en fin()";}
+}
+int Vlista::primero(){
+	if (!vacia()) {
+		return 1;
+	}else{return NULO};
+}
+int Vlista::siguiente(int d){
+	if (vacia()) {
+	cout<<"ERROR/LISTA VACIA";
+	}else{
+		if (d==longitud) {
+cout<<"ERROR/ULTIMA int";
+		}else{
+		if (d>longitud) {
+			 return -1;
+		} else
+		return d+1;
+		}
+	}
+}
+int Vlista::anterior(int d){
+	if (vacia()) {
+		cout<<"ERROR/LISTA VACIA";
+	}
+	else{
+	  if (d==1) {
+		  cout<<"ERROR/PRIMERA DIRECCION";
+	  }
+	  else{
+		  return (d-1);
+	  }
+	}
+}
+
+bool Vlista::vacia(){
+return (longitud==0);
+}
+
+int Vlista::recupera(int d){
+if (vacia()) {
+	return -1;
+}
+else
+{
+	if ((d>=1 && d<=longitud)) {
+	return elementos[d];
+	}
+	else
+	{
+		return -1;
+	}
+}
+}
+int Vlista::getlongitud(){return longitud;}
+
+void Vlista::insertar(int p, int elemento){
+if (longitud == MAX) {
+	cout<<"ERROR/LISTA LLENA";
+}
+else
+{
+	if (p>=1 && p<=longitud) {
+	  for (int i=(longitud+1); i >= (p+1); i--) {
+		  elementos[i]=elementos[i-1];
+	  }
+	  elementos[p]= elemento; longitud++;
+	}
+	else
+	{
+		cout<<"ERROR/DIRECCION FUERA DE RANGO";
+    }
+}
+}
+void Vlista::inserta_primero(int elemento){
+if (longitud == MAX) {
+	cout<<"ERROR/LISTA LLENA";
+}
+else
+{
+	for (int i=(longitud + 1); i >= 2; i--) {
+	elementos[i]=elementos[i-1];
+	}
+	elementos[1]=elemento;
+	longitud++;
+	int X=1;
+}
+}
+void Vlista::inserta_ultimo(int elemento){
+if (longitud == MAX) {
+	cout<<"ERROR/MEMORIA LLENA";
+}
+else{
+	longitud++;
+	elementos[longitud]=elemento;
+}
+}
+void Vlista::suprime(int p){
+if (longitud ==0) {
+	cout<<"ERROR/LISTA VACIA";
+}else{
+	if (!(p>=1 && p<=longitud)) {
+	   cout<<"ERROR/DIRECCION FUERA DE RANGO";
+	}else{
+		for (int i=p; i<longitud-1; i++) {
+			elementos[i]=elementos[i+1];
+		}
+		longitud--;
+	}
+}
+
+}
+void Vlista::modifica(int p,int elemento){
+if (longitud == 0) {
+	cout<<"ERROR/LISTA VACIA";
+}
+else{
+   if (!(p>=1 && p<=longitud)) {
+	   cout<<"ERROR/DIRECCION FUERA DE RANGO";
+	}else{
+		elementos[p]=elemento;
+	}
+}
+}
+
+void Pintado(int posX, int posY, String cad, TColor color, TCanvas *Canvas){
+int TamanoCelda = 35;
+int TamanoCeldaX = 80;
+int TamanoCeldaY = 35;
+	//           x1  y1    x2                   y2
+	TRect rect(posX,posY,posX+TamanoCeldaX,posY+TamanoCeldaY);
+	Canvas->Brush->Color = color;
+	Canvas->FillRect(rect);
+
+	Canvas->TextOutW(posX,posY+3,cad);
+
+}
+
+void Vlista::imprimir(TColor FormColor, TCanvas *Canvas){
+int TamanoCelda = 35;
+int TamanoCeldaX = 80;
+int TamanoCeldaY = 35;
+
+int	posX = 180;
+int	posY = 480;
+int auxX = posX;
+int auxY = posY;
+
+	if (!vacia()) {
+
+			//DIBUJAMOS CABECERA
+			Pintado(posX,posY,"Lista",FormColor,Canvas);
+			posX= auxX;
+			posY+= TamanoCeldaY;
+
+			Direccion x = 1;
+			Pintado(posX,posY,"< ",FormColor,Canvas);
+			posX+=40;
+			while (elementos[x] != 0){
+			Pintado(posX,posY,IntToStr(elementos[x]),FormColor,Canvas);
+			posX+=80;
+			x++;
+				if (elementos[x] != 0) {
+				Pintado(posX,posY,",",FormColor,Canvas);
+				posX+=40;
+				}
+
+			}
+			Pintado(posX,posY,">",FormColor,Canvas);
+			posX+=40;
+	}else{
+    Pintado(posX,posY,"Lista Vacia",FormColor,Canvas);
+			posX= auxX;
+			posY+= TamanoCeldaY;
+	}
+
+}
+

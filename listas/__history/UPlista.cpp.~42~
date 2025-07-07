@@ -1,0 +1,336 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+
+#include "UPlista.h"
+//---------------------------------------------------------------------------
+
+#pragma package(smart_init)
+//-----------------------------------------------------------
+ptrlista::ptrlista(){
+longitud=0;
+ptrelemento=nullptr;
+}
+//-----------------------------------------------------------
+Nodolista* ptrlista::fin(){
+if (vacia()) {
+   return nullptr ;//cout<<"ERROR/FIN():LISTA VACIA";
+}else{
+Nodolista* x= ptrelemento;
+Nodolista* ptrfin;
+	while (x != NULL){
+	ptrfin=x;
+    x=x->sig;
+	}
+	return ptrfin;
+}
+}
+//-----------------------------------------------------------
+Nodolista* ptrlista::primero(){
+if (!vacia()) {
+	return ptrelemento;
+}else{ return nullptr ;}
+}
+//-----------------------------------------------------------
+Nodolista* ptrlista::siguiente(Nodolista* direccion){
+if (vacia()) {
+	 return nullptr ;
+
+}
+else{
+	if (direccion == fin()) { return nullptr ;}
+	else{return direccion->sig;}
+}
+return nullptr;
+}
+//-----------------------------------------------------------
+Nodolista* ptrlista::anterior(Nodolista* direccion){
+if (vacia()) {
+ return nullptr ;
+}
+else
+{
+	if (direccion == primero()) {
+		 return nullptr ;
+	}
+	else
+	{
+		Nodolista* x=ptrelemento;
+		Nodolista* ant=NULL;
+		while (x!=NULL)
+			{
+			   if (x==direccion) {
+				   return ant;
+			   }
+			   else
+			   {
+				ant = x;
+                x = x->sig;
+               }
+            }
+	}
+}
+}
+//-----------------------------------------------------------
+bool ptrlista::vacia(){
+return longitud==0;
+}
+//-----------------------------------------------------------
+int ptrlista::recupera(Nodolista* d){if (!vacia()){return d->elemento;}else{ return -1 ;}}
+//-----------------------------------------------------------
+int ptrlista::getlongitud(){ return longitud;}
+//-----------------------------------------------------------
+void ptrlista::insertar(Nodolista* direccion, int ele){
+Nodolista* x=new Nodolista;
+if (x!=NULL) {
+	x->elemento=ele;
+	x->sig=NULL;
+	if (vacia()) {
+		ptrelemento=x;
+		longitud=1;
+
+	}
+	else
+	{
+	   if (direccion==primero()) {
+		   x->sig=direccion;
+		   ptrelemento=x;  longitud+=1;
+	   }
+	   else
+	   {
+		   Nodolista* ant=anterior(direccion);
+		   ant->sig=x;
+		   x->sig=direccion; longitud+=1   ;
+       }
+	}
+}
+
+}
+//-----------------------------------------------------------
+void ptrlista::inserta_primero(int ele){
+Nodolista* x=new Nodolista;
+if (x!=NULL) {
+	x->elemento=ele;
+	x->sig=ptrelemento;
+	longitud++;
+	ptrelemento=x;
+}
+}
+//-----------------------------------------------------------
+void ptrlista::inserta_ultimo(int ele){
+Nodolista* x=new Nodolista;
+if (x!=NULL) {
+	x->elemento=ele;
+	x->sig=NULL;
+	if (longitud!=0) {
+		fin()->sig=x;
+	}
+	else
+	{
+		ptrelemento=x;
+
+	}
+	longitud++;
+}
+}
+//-----------------------------------------------------------
+void ptrlista::suprime(Nodolista* d){
+if (longitud==0) {
+    int x;
+}
+else
+{
+	if (d==ptrelemento) {
+		Nodolista* x= ptrelemento;
+		ptrelemento=ptrelemento->sig;
+		delete x;
+	}
+	else
+	{
+		Nodolista* ant = anterior(d);
+		ant->sig=siguiente(d);
+		delete d;
+	}
+   longitud--;
+}
+}
+//-----------------------------------------------------------
+void ptrlista::modifica(Nodolista* d,int ele){
+if (!vacia()) {
+	d->elemento=ele;
+}
+else
+{
+  //	cout<<"lista vacia en modifica();";
+}
+}
+void ptrlista::elimLista(){
+if (!vacia()) {
+   while (ptrelemento!=nullptr){
+   suprime(fin());
+}
+} else{
+
+}
+}
+
+//----------------------------------------------------------- <    x,
+
+void Pintado(int posX, int posY, String cad, TColor color, TCanvas *Canvas){
+int TamanoCelda = 35;
+int TamanoCeldaX = 80;
+int TamanoCeldaY = 35;
+	//           x1  y1    x2                   y2
+	TRect rect(posX,posY,posX+TamanoCeldaX,posY+TamanoCeldaY);
+	Canvas->Brush->Color = color;
+	Canvas->FillRect(rect);
+
+	Canvas->TextOutW(posX,posY+3,cad);
+
+}
+void ptrlista::imprimir2(TColor FormColor, TCanvas *Canvas,int posX,int posY){
+
+int TamanoCelda = 35;
+int TamanoCeldaX = 80;
+int TamanoCeldaY = 35;
+
+
+int auxX = posX;
+int auxY = posY;
+
+	if (!vacia()) {
+
+			//DIBUJAMOS CABECERA
+			Pintado(posX,posY,"Lista",FormColor,Canvas);
+			posX= auxX;
+			posY+= TamanoCeldaY;
+
+			Nodolista* x = ptrelemento;
+			Pintado(posX,posY,"< ",FormColor,Canvas);
+			posX+=40;
+			while (x != nullptr){
+			Pintado(posX,posY,IntToStr(x->elemento),FormColor,Canvas);
+			posX+=80;
+			x = x->sig;
+				if (x != nullptr) {
+				Pintado(posX,posY,",",FormColor,Canvas);
+				posX+=40;
+				}
+
+			}
+			Pintado(posX,posY,">",FormColor,Canvas);
+			posX+=40;
+	}else{
+    Pintado(posX,posY,"Lista Vacia",FormColor,Canvas);
+			posX= auxX;
+			posY+= TamanoCeldaY;
+	}
+
+
+}
+void ptrlista::imprimir(TColor FormColor, TCanvas *Canvas){
+int TamanoCelda = 35;
+int TamanoCeldaX = 80;
+int TamanoCeldaY = 35;
+
+int	posX = 500;
+int	posY = 200;
+int auxX = posX;
+int auxY = posY;
+
+	if (!vacia()) {
+
+			//DIBUJAMOS CABECERA
+			Pintado(posX,posY,"Lista",FormColor,Canvas);
+			posX= auxX;
+			posY+= TamanoCeldaY;
+
+			Nodolista* x = ptrelemento;
+			Pintado(posX,posY,"< ",FormColor,Canvas);
+			posX+=40;
+			while (x != nullptr){
+			Pintado(posX,posY,IntToStr(x->elemento),FormColor,Canvas);
+			posX+=80;
+			x = x->sig;
+				if (x != nullptr) {
+				Pintado(posX,posY,",",FormColor,Canvas);
+				posX+=40;
+				}
+
+			}
+			Pintado(posX,posY,">",FormColor,Canvas);
+			posX+=40;
+	}else{
+    Pintado(posX,posY,"Lista Vacia",FormColor,Canvas);
+			posX= auxX;
+			posY+= TamanoCeldaY;
+	}
+
+}
+Nodolista* ptrlista::localiza(int ele){
+if (vacia()) {
+	return nullptr;
+}
+else{
+	int e;
+	Nodolista* p = primero();
+	while (p!=fin())
+		{
+		e = recupera(p);
+			if (e==ele) {
+			return p;
+			}else
+			{
+				if(p!=fin()){
+				p=siguiente(p);
+				}
+			}
+		}
+		e = recupera(p);
+		if (e==ele) {
+			return p;
+			}else
+			{
+			return nullptr;
+			}
+
+}
+
+}
+
+void ptrlista::eliminardato(int ele){
+if (!vacia()) {
+
+	 Nodolista* x=localiza(ele);
+
+	  while (x!=nullptr && x!=fin())
+		 {
+		 if (x!=nullptr) {
+		  suprime(x);
+		 }
+		 x=localiza(ele);
+
+		 }
+		 if (x==fin()) {
+		  suprime(x);
+		 }
+}
+}
+void ptrlista::anular(){
+if (!vacia()) {
+
+	  Nodolista* x = primero();
+	  while (x!=fin())
+		 {
+
+		  suprime(x);
+
+		 x=primero();
+
+		 }
+		 if (x==fin()) {
+		  suprime(x);
+		 }
+}
+}
+

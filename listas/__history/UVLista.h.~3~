@@ -1,0 +1,40 @@
+//---------------------------------------------------------------------------
+
+#ifndef UVListaH
+#define UVListaH
+//---------------------------------------------------------------------------
+#include <iostream>
+#include <tchar.h>
+#include <string>
+#include <iomanip>
+using namespace std;
+
+class Vlista{
+	private:
+
+    static const int MAX = 100;
+	static const int NULO = -1;
+	typedef int Direccion;
+
+	int elementos[MAX];
+	int longitud;
+	public:
+	Vlista();
+	Direccion fin();
+	Direccion primero();
+	Direccion siguiente(Direccion d);
+	Direccion anterior(Direccion d);
+	bool vacia();
+	int recupera(Direccion dirección);
+	int getlongitud();
+	void inserta( Direccion dirección,int elemento);
+	void inserta_primero(int elemento);
+	void inserta_ultimo(int elemento);
+	void suprime(Direccion dirección);
+	void modifica(Direccion dirección,int elemento);
+	string imprimir();
+
+};
+
+
+#endif

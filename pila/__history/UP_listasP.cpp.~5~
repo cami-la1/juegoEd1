@@ -1,0 +1,29 @@
+//---------------------------------------------------------------------------
+
+#pragma hdrstop
+
+#include "UP_listasP.h"
+//---------------------------------------------------------------------------
+#pragma package(smart_init)
+		pilal_P::pilal_P(){
+	   Nodopi* ptrpi =new pilal_P();
+		}
+bool pilal_P ::Vacia(){
+return ls->vacia();
+}void pilal_P ::Meter(int e){
+ls->insertar(ls->primero(),e);
+}
+void pilal_P ::Sacar(int e){
+ls->recupera(ls->primero());
+ls->suprime(ls->primero() );
+
+}
+int pilal_P ::cima(){
+
+return ls->recupera(ls->primero());
+
+}
+ void pilal_P ::imprimir(TColor FormColor, TCanvas *Canvas){
+
+ ls->imprimir2(FormColor,Canvas,1150,800)   ;
+ }

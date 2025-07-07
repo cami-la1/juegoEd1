@@ -1,0 +1,28 @@
+//---------------------------------------------------------------------------
+			#include "Umemoria.h"
+#ifndef Matriz_1NH
+#define Matriz_1NH
+//---------------------------------------------------------------------------
+
+class MatrizDispersa {
+private:
+    int PtrMatD; // Dirección
+    int rep;
+    int dimf;
+	int dimc;
+
+public:
+ MatrizDispersa( CSmemoria* M);
+    void Crear();     CSmemoria* Cm;
+    void dimensionar(int df, int dc);
+    int dimension_Fila();
+	int dimension_columna();
+	int buscar(int f, int c) ;
+    void poner(int f, int c, int valor);
+    int Elemento(int f, int c);
+	void Definir_valor_repetido(int valor);
+     void imprimir(TColor FormColor, TCanvas *Canvas) ;
+
+
+};
+#endif
